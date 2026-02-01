@@ -3,6 +3,7 @@
 
 # the script will be excuted when `argon.@global[0].bing_background == '1'`
 # defaults to 'bing' to be compatible with old config
+
 WEB_PIC_SRC="$(uci -q get argon.@global[0].online_wallpaper || echo 'bing')"
 CACHE="/var/run/argon_${WEB_PIC_SRC}.url"
 WRLOCK="/var/lock/argon_${WEB_PIC_SRC}.lock"
@@ -12,11 +13,12 @@ fetch_pic_url() {
 	bing)
 		local picpath="$(wget -T3 -qO- \
 			"https://www.bing.com/HPImageArchive.aspx?format=js&n=1" |
-			jsonfilter -qe '@.images[0].url')"
+			jsonfilter -qe '@.images[0].url' |
+			sed 's/1920x1080/UHD/g')"
 		[ -n "${picpath}" ] && echo "//www.bing.com${picpath}"
 		;;
 	ghser)
-		echo "https://api.ghser.com/random/api.php"
+		echo "https://api.vvhan.com/api/wallpaper/acg"
 		;;
 	unsplash)
 		local pic_id="$(wget -T3 --spider \

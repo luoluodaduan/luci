@@ -30,7 +30,7 @@ function renderStatus(isRunning, listen_port, noweb) {
 	if (isRunning) {
 		renderHTML = spanTemp.format('green', _('DDNS-Go'), _('RUNNING'));
 		if (noweb !== '1')
-			renderHTML+= String.format('&#160;<a class="btn cbi-button" href="%s:%s" target="_blank" rel="noreferrer noopener">%s</a>',
+			renderHTML += String.format('&#160;<a class="btn cbi-button" href="%s:%s" target="_blank" rel="noreferrer noopener">%s</a>',
 				window.location.origin, listen_port, _('Open Web Interface'));
 	} else {
 		renderHTML = spanTemp.format('red', _('DDNS-Go'), _('NOT RUNNING'));
@@ -40,16 +40,16 @@ function renderStatus(isRunning, listen_port, noweb) {
 }
 
 return view.extend({
-	load: function() {
+	load: function () {
 		return Promise.all([
 			uci.load('ddns-go')
 		]);
 	},
 
-	render: function(data) {
+	render: function (data) {
 		var m, s, o;
 		var listen_port = (uci.get(data[0], 'config', 'listen') || '[::]:9876').split(':').slice(-1)[0],
-		    noweb = uci.get(data[0], 'config', 'noweb') || '0';
+			noweb = uci.get(data[0], 'config', 'noweb') || '0';
 
 		m = new form.Map('ddns-go', _('DDNS-Go'),
 			_('A simple and easy-to-use Dynamic DNS client with IPv6 support.'));
@@ -65,7 +65,7 @@ return view.extend({
 			});
 
 			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-					E('p', { id: 'service_status' }, _('Collecting data...'))
+				E('p', { id: 'service_status' }, _('Collecting data...'))
 			]);
 		}
 
@@ -83,6 +83,9 @@ return view.extend({
 		o = s.option(form.Value, 'ttl', _('Update interval'));
 		o.default = '300';
 		o.rmempty = false;
+
+		o = s.option(form.Value, 'dns', _('Custom DNS server'));
+		o.datatype = 'ipaddr';
 
 		o = s.option(form.Flag, 'noweb', _('Disable WebUI'));
 		o.default = o.disabled;

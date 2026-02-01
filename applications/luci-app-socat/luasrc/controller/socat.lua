@@ -1,19 +1,28 @@
--- Copyright 2020 Lienol <lawlienol@gmail.com>
 module("luci.controller.socat", package.seeall)
-local http = require "luci.http"
 
 function index()
-    if not nixio.fs.access("/etc/config/socat") then return end
+	if not require("nixio.fs").access("/usr/bin/socat") then
+		return
+	end
 
-    entry({"admin", "network", "socat"}, cbi("socat/index"), _("Socat"), 100).acl_depends = { "luci-app-socat" }
-    entry({"admin", "network", "socat", "config"}, cbi("socat/config")).leaf = true
-    entry({"admin", "network", "socat", "status"}, call("status")).leaf = true
+	entry({ "admin", "services", "socat" }, alias("admin", "services", "socat", "index"), _("Socat"), 100).dependent = true
+	entry({ "admin", "services", "socat", "index" }, cbi("socat/index")).leaf = true
+	entry({ "admin", "services", "socat", "config" }, cbi("socat/config")).leaf = true
+	entry({ "admin", "services", "socat", "status" }, call("act_status")).leaf = true
 end
 
-function status()
-      local e = {}
-      e.index = luci.http.formvalue("index")
-      e.status = luci.sys.call(string.format("ps -w | grep -v 'grep' | grep '/var/etc/socat/%s' >/dev/null", luci.http.formvalue("id"))) == 0
-      http.prepare_content("application/json")
-      http.write_json(e)
+function act_status()
+	local sys = require("luci.sys")
+	local json = require("luci.jsonc")
+	local http = require("luci.http")
+	local raw_stat = sys.exec('ubus call service list \'{"name": "socat"}\'')
+	local data = json.parse(raw_stat)
+	local response = { instances = {} }
+
+	if data and data.socat and data.socat.instances then
+		response.instances = data.socat.instances
+	end
+
+	http.prepare_content("application/json")
+	http.write_json(response)
 end

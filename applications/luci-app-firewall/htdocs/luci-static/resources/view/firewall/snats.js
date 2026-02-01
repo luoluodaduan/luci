@@ -9,27 +9,27 @@
 'require tools.widgets as widgets';
 
 function rule_proto_txt(s) {
-	var proto = L.toArray(uci.get('firewall', s, 'proto')).filter(function(p) {
+	var proto = L.toArray(uci.get('firewall', s, 'proto')).filter(function (p) {
 		return (p != '*' && p != 'any' && p != 'all');
-	}).map(function(p) {
+	}).map(function (p) {
 		var pr = fwtool.lookupProto(p);
 		return {
-			num:  pr[0],
+			num: pr[0],
 			name: pr[1]
 		};
 	});
 
-	m = String(uci.get('firewall', s, 'mark')).match(/^(!\s*)?(0x[0-9a-f]{1,8}|[0-9]{1,10})(?:\/(0x[0-9a-f]{1,8}|[0-9]{1,10}))?$/i);
+	var m = String(uci.get('firewall', s, 'mark')).match(/^(!\s*)?(0x[0-9a-f]{1,8}|[0-9]{1,10})(?:\/(0x[0-9a-f]{1,8}|[0-9]{1,10}))?$/i);
 	var f = m ? {
-		val:  m[0].toUpperCase().replace(/X/g, 'x'),
-		inv:  m[1],
-		num:  '0x%02X'.format(+m[2]),
+		val: m[0].toUpperCase().replace(/X/g, 'x'),
+		inv: m[1],
+		num: '0x%02X'.format(+m[2]),
 		mask: m[3] ? '0x%02X'.format(+m[3]) : null
 	} : null;
 
 	return fwtool.fmt(_('Forwarded IPv4%{proto?, protocol %{proto#%{next?, }<var>%{item.name}</var>}}%{mark?, mark <var%{mark.inv? data-tooltip="Match fwmarks except %{mark.num}%{mark.mask? with mask %{mark.mask}}.":%{mark.mask? data-tooltip="Mask fwmark value with %{mark.mask} before compare."}}>%{mark.val}</var>}'), {
 		proto: proto,
-		mark:  f
+		mark: f
 	});
 }
 
@@ -56,9 +56,9 @@ function rule_dest_txt(s) {
 
 function rule_limit_txt(s) {
 	var m = String(uci.get('firewall', s, 'limit')).match(/^(\d+)\/([smhd])\w*$/i),
-	    l = m ? {
-			num:   +m[1],
-			unit:  ({ s: _('second'), m: _('minute'), h: _('hour'), d: _('day') })[m[2]],
+		l = m ? {
+			num: +m[1],
+			unit: ({ s: _('second'), m: _('minute'), h: _('hour'), d: _('day') })[m[2]],
 			burst: uci.get('firewall', s, 'limit_burst')
 		} : null;
 
@@ -70,24 +70,24 @@ function rule_limit_txt(s) {
 
 function rule_target_txt(s) {
 	var t = uci.get('firewall', s, 'target'),
-	    s = {
-	    	target:    t,
-	    	snat_ip:   uci.get('firewall', s, 'snat_ip'),
-	    	snat_port: uci.get('firewall', s, 'snat_port')
-	    };
+		s = {
+			target: t,
+			snat_ip: uci.get('firewall', s, 'snat_ip'),
+			snat_port: uci.get('firewall', s, 'snat_port')
+		};
 
 	switch (t) {
-	case 'SNAT':
-		return fwtool.fmt(_('<var data-tooltip="SNAT">Statically rewrite</var> to source %{snat_ip?IP <var>%{snat_ip}</var>} %{snat_port?port <var>%{snat_port}</var>}'), s);
+		case 'SNAT':
+			return fwtool.fmt(_('<var data-tooltip="SNAT">Statically rewrite</var> to source %{snat_ip?IP <var>%{snat_ip}</var>} %{snat_port?port <var>%{snat_port}</var>}'), s);
 
-	case 'MASQUERADE':
-		return fwtool.fmt(_('<var data-tooltip="MASQUERADE">Automatically rewrite</var> source IP'));
+		case 'MASQUERADE':
+			return fwtool.fmt(_('<var data-tooltip="MASQUERADE">Automatically rewrite</var> source IP'));
 
-	case 'ACCEPT':
-		return fwtool.fmt(_('<var data-tooltip="ACCEPT">Prevent source rewrite</var>'));
+		case 'ACCEPT':
+			return fwtool.fmt(_('<var data-tooltip="ACCEPT">Prevent source rewrite</var>'));
 
-	default:
-		return t;
+		default:
+			return t;
 	}
 }
 
@@ -104,7 +104,7 @@ return view.extend({
 		expect: { '': {} }
 	}),
 
-	load: function() {
+	load: function () {
 		return Promise.all([
 			this.callHostHints(),
 			this.callNetworkDevices(),
@@ -112,17 +112,17 @@ return view.extend({
 		]);
 	},
 
-	render: function(data) {
+	render: function (data) {
 		if (fwtool.checkLegacySNAT())
 			return fwtool.renderMigration();
 		else
 			return this.renderNats(data);
 	},
 
-	renderNats: function(data) {
+	renderNats: function (data) {
 		var hosts = data[0],
-		    devs = data[1],
-		    m, s, o;
+			devs = data[1],
+			m, s, o;
 
 		m = new form.Map('firewall', _('Firewall - NAT Rules'),
 			_('NAT rules allow fine grained control over the source IP to use for outbound or forwarded traffic.'));
@@ -130,13 +130,13 @@ return view.extend({
 		s = m.section(form.GridSection, 'nat', _('NAT Rules'));
 		s.addremove = true;
 		s.anonymous = true;
-		s.sortable  = true;
+		s.sortable = true;
 
 		s.tab('general', _('General Settings'));
 		s.tab('advanced', _('Advanced Settings'));
 		s.tab('timed', _('Time Restrictions'));
 
-		s.sectiontitle = function(section_id) {
+		s.sectiontitle = function (section_id) {
 			return uci.get('firewall', section_id, 'name') || _('Unnamed NAT');
 		};
 
@@ -146,7 +146,7 @@ return view.extend({
 
 		o = s.option(form.DummyValue, '_match', _('Match'));
 		o.modalonly = false;
-		o.textvalue = function(s) {
+		o.textvalue = function (s) {
 			return E('small', [
 				rule_proto_txt(s), E('br'),
 				rule_src_txt(s, hosts), E('br'),
@@ -157,7 +157,7 @@ return view.extend({
 
 		o = s.option(form.ListValue, '_target', _('Action'));
 		o.modalonly = false;
-		o.textvalue = function(s) {
+		o.textvalue = function (s) {
 			return rule_target_txt(s);
 		};
 
@@ -216,9 +216,9 @@ return view.extend({
 			_('Rewrite matched traffic to the specified source IP address.'), devs);
 		o.placeholder = null;
 		o.depends('target', 'SNAT');
-		o.validate = function(section_id, value) {
+		o.validate = function (section_id, value) {
 			var a = this.formvalue(section_id),
-			    p = this.section.formvalue(section_id, 'snat_port');
+				p = this.section.formvalue(section_id, 'snat_port');
 
 			if ((a == null || a == '') && (p == null || p == '') && value == '')
 				return _('A rewrite IP must be specified!');
@@ -262,8 +262,8 @@ return view.extend({
 		o.value('Thu', _('Thursday'));
 		o.value('Fri', _('Friday'));
 		o.value('Sat', _('Saturday'));
-		o.write = function(section_id, value) {
-			return this.super('write', [ section_id, L.toArray(value).join(' ') ]);
+		o.write = function (section_id, value) {
+			return this.super('write', [section_id, L.toArray(value).join(' ')]);
 		};
 
 		o = s.taboption('timed', form.MultiValue, 'monthdays', _('Month Days'));
@@ -271,8 +271,8 @@ return view.extend({
 		o.multiple = true;
 		o.display_size = 15;
 		o.placeholder = _('Any day');
-		o.write = function(section_id, value) {
-			return this.super('write', [ section_id, L.toArray(value).join(' ') ]);
+		o.write = function (section_id, value) {
+			return this.super('write', [section_id, L.toArray(value).join(' ')]);
 		};
 		for (var i = 1; i <= 31; i++)
 			o.value(i);

@@ -82,40 +82,25 @@
 	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
-	<link rel="manifest" href="<%=media%>/icon/manifest.json"  crossorigin="use-credentials">
+	<link rel="manifest" href="<%=media%>/icon/manifest.json" crossorigin="use-credentials">
 	<meta name="msapplication-TileColor" content="<%=bar_color%>">
 	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
 	<meta name="theme-color" content="<%=bar_color%>">
 	<link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
 	<style title="text/css">
-		<% if mode ~= 'dark' then %>
-			@media (prefers-color-scheme: dark) {
-				<%=dark_css%>
-			}
-		<% if fs.access('/etc/config/argon') then %>
-		:root {
-			--primary: <%=primary%>;
-			--dark-primary: <%=dark_primary%>;
-				--bar-bg: <%=primary%>;
-			--blur-radius:<%=blur_radius%>px;
-			--blur-opacity:<%=blur_opacity%>;
-			--blur-radius-dark:<%=blur_radius_dark%>px;
-			--blur-opacity-dark:<%=blur_opacity_dark%>;
-		}
-		<% end -%>
-		<% elseif mode == 'dark' then %>
+		<% if mode=='normal' then %>@media (prefers-color-scheme: dark) {
 			<%=dark_css%>
-		<% if fs.access('/etc/config/argon') then %>
-		:root {
+		}
+
+		<% elseif mode=='dark' then %><%=dark_css%><% end -%><% if fs.access('/etc/config/argon') then %>:root {
 			--primary: <%=primary%>;
 			--dark-primary: <%=dark_primary%>;
-				--bar-bg: <%=dark_primary%>;
-			--blur-radius:<%=blur_radius%>px;
-			--blur-opacity:<%=blur_opacity%>;
-			--blur-radius-dark:<%=blur_radius_dark%>px;
-			--blur-opacity-dark:<%=blur_opacity_dark%>;
+			--blur-radius: <%=blur_radius%>px;
+			--blur-opacity: <%=blur_opacity%>;
+			--blur-radius-dark: <%=blur_radius_dark%>px;
+			--blur-opacity-dark: <%=blur_opacity_dark%>;
 		}
-		<% end -%>
+
 		<% end -%>
 	</style>
 	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
@@ -134,9 +119,7 @@
 	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
 </head>
 
-<body
-	class="lang_<%=luci.i18n.context.lang%> <% if node then %><%= striptags( node.title ) %><% end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>"
-	data-page="<%= table.concat(disp.context.requestpath, "-") %>">
+<body class="lang_<%=luci.i18n.context.lang%> <% if node then %><%= striptags( node.title ) %><% end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>" data-page="<%= pcdata(table.concat(disp.context.requestpath, "-")) %>">
 
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">
@@ -144,8 +127,7 @@
 				<a class="brand" href="#"><%=brand_name%></a>
 				<div class="ml-auto">
 					<!-- Sidenav toggler -->
-					<div class="sidenav-toggler d-none d-xl-block active" data-action="sidenav-unpin"
-						data-target="#sidenav-main">
+					<div class="sidenav-toggler d-none d-xl-block active" data-action="sidenav-unpin" data-target="#sidenav-main">
 						<div class="sidenav-toggler-inner">
 							<i class="sidenav-toggler-line"></i>
 							<i class="sidenav-toggler-line"></i>
@@ -176,8 +158,7 @@
 						<p><%:There is no password set on this router. Please configure a root password to protect the web interface.%>
 						</p>
 						<% if disp.lookup("admin/system/admin") then %>
-						<div class="right"><a class="btn"
-								href="<%=url("admin/system/admin")%>"><%:Go to password configuration...%></a></div>
+						<div class="right"><a class="btn" href="<%=url("admin/system/admin")%>"><%:Go to password configuration...%></a></div>
 						<% end %>
 					</div>
 					<%- end -%>

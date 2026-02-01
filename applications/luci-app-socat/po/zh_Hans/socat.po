@@ -20,10 +20,10 @@ msgid "Protocol"
 msgstr "协议"
 
 msgid "IPv6 Only"
-msgstr "仅IPv6"
+msgstr "仅 IPv6"
 
 msgid "When checked, only IPv6 ports are listen for, otherwise IPv4 will also be listened for."
-msgstr "当勾选时，仅监听IPv6，否则将会同时监听IPv4。"
+msgstr "当勾选时，仅监听 IPv6，否则将会同时监听 IPv4。"
 
 msgid "Port Forwards"
 msgstr "端口转发"
@@ -33,6 +33,9 @@ msgstr "监听协议"
 
 msgid "Listen port"
 msgstr "监听端口"
+
+msgid "REUSEADDR"
+msgstr "地址重用"
 
 msgid "Bind to a port local"
 msgstr "绑定到本地端口"
@@ -48,3 +51,6 @@ msgstr "目标端口"
 
 msgid "Open firewall port"
 msgstr "打开防火墙端口"
+
+msgid "Socat is a relay for bidirectional data transfer between two independent data channels."
+msgstr "Socat 是用于在两个独立数据通道之间进行双向数据传输的中继器。"

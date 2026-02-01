@@ -13,16 +13,6 @@
 'require ui';
 'require view';
 
-var CBIStaticList = form.DynamicList.extend({
-	__name__: 'CBI.StaticList',
-
-	renderWidget: function(/* ... */) {
-		var dl = form.DynamicList.prototype.renderWidget.apply(this, arguments);
-		dl.querySelector('.add-item ul > li[data-value="-"]').remove();
-		return dl;
-	}
-});
-
 var callServiceList = rpc.declare({
 	object: 'service',
 	method: 'list',
@@ -54,36 +44,37 @@ function renderStatus(isRunning) {
 
 function uploadCertificate(type, filename, ev) {
 	return ui.uploadFile('/usr/share/unblockneteasemusic/' + filename, ev.target)
-	.then(L.bind(function(btn, res) {
-		btn.firstChild.data = _('检查 %s 中...').format(type);
+		.then(L.bind(function (btn, res) {
+			btn.firstChild.data = _('检查 %s 中...').format(type);
 
-		if (res.size <= 0) {
-			ui.addNotification(null, E('p', _('上传的 %s 为空。').format(tyupe)));
-			return fs.remove('/usr/share/unblockneteasemusic/' + filename);
-		}
+			if (res.size <= 0) {
+				ui.addNotification(null, E('p', _('上传的 %s 为空。').format(tyupe)));
+				return fs.remove('/usr/share/unblockneteasemusic/' + filename);
+			}
 
-		ui.addNotification(null, E('p', _('您的 %s 已成功上传。大小：%sB。').format(type, res.size)));
-	}, this, ev.target))
-	.catch(function(e) { ui.addNotification(null, E('p', e.message)) })
-	.finally(L.bind(function(btn, input) {
-		btn.firstChild.data = _('上传...');
-	}, this, ev.target));
+			ui.addNotification(null, E('p', _('您的 %s 已成功上传。大小：%sB。').format(type, res.size)));
+		}, this, ev.target))
+		.catch(function (e) { ui.addNotification(null, E('p', e.message)) })
+		.finally(L.bind(function (btn, input) {
+			btn.firstChild.data = _('上传...');
+		}, this, ev.target));
 }
 
 return view.extend({
-	load: function() {
+	load: function () {
 		return Promise.all([
 			uci.load('unblockneteasemusic'),
 			network.getHostHints()
 		]);
 	},
 
-	render: function(data) {
+	render: function (data) {
 		var m, s, o;
+		var hosts = data[1]?.hosts;
 
 		m = new form.Map('unblockneteasemusic', _('解除网易云音乐播放限制'),
 			_('原理：采用 [Bilibili/JOOX/酷狗/酷我/咪咕/pyncmd/QQ/Youtube] 等音源，替换网易云音乐 无版权/收费 歌曲链接<br/>' +
-			'具体使用方法参见：<a href="https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic" target="_blank">GitHub @UnblockNeteaseMusic/luci-app-unblockneteasemusic</a>'));
+				'具体使用方法参见：<a href="https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic" target="_blank">GitHub @UnblockNeteaseMusic/luci-app-unblockneteasemusic</a>'));
 
 		s = m.section(form.TypedSection);
 		s.anonymous = true;
@@ -96,7 +87,7 @@ return view.extend({
 			});
 
 			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-					E('p', { id: 'service_status' }, _('收集数据中...'))
+				E('p', { id: 'service_status' }, _('收集数据中...'))
 			]);
 		}
 
@@ -106,9 +97,11 @@ return view.extend({
 		o.default = o.disabled;
 		o.rmempty = false;
 
-		o = s.option(CBIStaticList, 'music_source', _('音源接口'),
+		o = s.option(form.DynamicList, 'music_source', _('音源接口'),
 			_('留空以使用默认音源。'));
 		o.value('bilibili', _('Bilibili 音乐'));
+		o.value('bilivideo', _('Bilibili 音乐 (bilivideo)'));
+		o.value('bodian', _('波点音乐'));
 		o.value('joox', _('JOOX 音乐'));
 		o.value('kugou', _('酷狗音乐'));
 		o.value('kuwo', _('酷我音乐'));
@@ -118,26 +111,35 @@ return view.extend({
 		o.value('youtube', _('Youtube 音乐'));
 		o.value('youtubedl', _('Youtube 音乐（youtube-dl）'));
 		o.value('ytdlp', _('Youtube 音乐（yt-dlp）'));
+		o.renderWidget = function (/* ... */) {
+			let dl = form.DynamicList.prototype.renderWidget.apply(this, arguments);
+			dl?.querySelector('.add-item ul > li[data-value="-"]')?.remove();
+			return dl;
+		}
 
 		o = s.option(form.Value, 'joox_cookie', _('JOOX Cookie'),
 			_('在 joox.com 获取，需要 wmid 和 session_key 值。'));
 		o.placeholder = 'wmid=; session_key=';
+		o.password = true;
 		o.rmempty = false;
-		o.depends({'music_source': 'joox', '!contains': true});
+		o.depends({ 'music_source': 'joox', '!contains': true });
 
 		o = s.option(form.Value, 'migu_cookie', _('Migu Cookie'),
 			_('通过抓包手机客户端请求获取，需要 aversionid 值。'));
-		o.depends({'music_source': 'migu', '!contains': true});
+		o.password = true;
+		o.depends({ 'music_source': 'migu', '!contains': true });
 
 		o = s.option(form.Value, 'qq_cookie', _('QQ Cookie'),
 			_('在 y.qq.com 获取，需要 uin 和 qm_keyst 值。'));
 		o.placeholder = 'uin=; qm_keyst=';
+		o.password = true;
 		o.rmempty = false;
-		o.depends({'music_source': 'qq', '!contains': true});
+		o.depends({ 'music_source': 'qq', '!contains': true });
 
 		o = s.option(form.Value, 'youtube_key', _('Youtube API Key'),
 			_('API Key 申请地址：https://developers.google.com/youtube/v3/getting-started#before-you-start'));
-		o.depends({'music_source': 'youtube', '!contains': true});
+		o.password = true;
+		o.depends({ 'music_source': 'youtube', '!contains': true });
 
 		o = s.option(form.Flag, 'follow_source_order', _('顺序查询'),
 			_('默认为并行查询并返回第一个结果，开启后将严格按照配置音源的顺序进行查询。'))
@@ -151,11 +153,11 @@ return view.extend({
 			_('目前仅支持酷狗、酷我、咪咕、pyncmd、QQ 音源。'));
 		o.default = o.disabled;
 		o.depends('music_source', []);
-		o.depends({'music_source': 'kugou', '!contains': true});
-		o.depends({'music_source': 'kuwo', '!contains': true});
-		o.depends({'music_source': 'migu', '!contains': true});
-		o.depends({'music_source': 'pyncmd', '!contains': true});
-		o.depends({'music_source': 'qq', '!contains': true});
+		o.depends({ 'music_source': 'kugou', '!contains': true });
+		o.depends({ 'music_source': 'kuwo', '!contains': true });
+		o.depends({ 'music_source': 'migu', '!contains': true });
+		o.depends({ 'music_source': 'pyncmd', '!contains': true });
+		o.depends({ 'music_source': 'qq', '!contains': true });
 
 		o = s.option(form.Flag, 'select_max_br', _('选取最高音质'),
 			_('选择所有音源中的最高码率替换音频。'));
@@ -200,8 +202,8 @@ return view.extend({
 			_('Linux / iOS / MacOSX 在信任根证书后方可正常使用。'));
 		o.inputstyle = 'apply';
 		o.inputtitle = _('下载 ca.crt');
-		o.onclick = function() {
-			return fs.read_direct('/usr/share/unblockneteasemusic/core/ca.crt', 'blob').then(function(blob) {
+		o.onclick = function () {
+			return fs.read_direct('/usr/share/unblockneteasemusic/core/ca.crt', 'blob').then(function (blob) {
 				var url = window.URL.createObjectURL(blob);
 				var link = E('a', { 'style': 'display:none', 'href': url, 'download': 'ca.crt' });
 
@@ -209,8 +211,8 @@ return view.extend({
 				link.click();
 				document.body.removeChild(link);
 				window.URL.revokeObjectURL(url);
-			}).catch(function(err) {
-				ui.addNotification(null, E('p', [ _('下载文件失败：%s。').format(err.message) ]));
+			}).catch(function (err) {
+				ui.addNotification(null, E('p', [_('下载文件失败：%s。').format(err.message)]));
 			});
 		}
 
@@ -218,7 +220,7 @@ return view.extend({
 			_('非必要不推荐启用。'));
 		o.default = o.disabled,
 
-		o = s.option(form.ListValue, 'log_level', _('日志等级'));
+			o = s.option(form.ListValue, 'log_level', _('日志等级'));
 		o.value('debug', _('调试'));
 		o.value('info', _('信息（默认）'));
 		o.value('silent', _('静默'));
@@ -251,7 +253,7 @@ return view.extend({
 		o.depends('advanced_mode', '1');
 
 		o = s.option(form.ListValue, 'hijack_ways', _('劫持方法'),
-			 _('如果使用 Hosts 劫持，监听端口将固定为 80/443，请注意更改您的 webUI 端口。'));
+			_('如果使用 Hosts 劫持，监听端口将固定为 80/443，请注意更改您的 webUI 端口。'));
 		o.value('dont_hijack', _('不开启劫持'));
 		o.value('use_ipset', _('使用 IPSet 劫持'));
 		o.value('use_hosts', _('使用 Hosts 劫持'));
@@ -316,14 +318,12 @@ return view.extend({
 		o.default = o.enabled;
 		o.rmempty = false;
 
-		o = s.option(form.Value, 'ip_addr', _('IP 地址'));
-		o.datatype = 'ip4addr';
-		for (var i of Object.entries(data[1].hosts))
-			for (var v in i[1].ipaddrs)
-				if (i[1].ipaddrs[v]) {
-					var ip_addr = i[1].ipaddrs[v], ip_host = i[1].name;
-					o.value(ip_addr, ip_host ? String.format('%s (%s)', ip_host, ip_addr) : ip_addr)
-				}
+		o = s.option(form.Value, 'mac_addr', _('MAC 地址'));
+		o.datatype = 'macaddr';
+		Object.keys(hosts).forEach(function (mac) {
+			var hint = hosts[mac].name || L.toArray(hosts[mac].ipaddrs || hosts[mac].ipv4)[0];
+			o.value(mac, hint ? '%s (%s)'.format(mac, hint) : mac);
+		});
 		o.rmempty = false;
 
 		o = s.option(form.ListValue, 'filter_mode', _('规则'));

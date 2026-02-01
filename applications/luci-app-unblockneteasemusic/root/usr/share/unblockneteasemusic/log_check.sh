@@ -10,5 +10,5 @@ log_file="/var/run/$NAME/run.log"
 while true; do
 	sleep 300
 	[ -s "$log_file" ] || continue
-	[ "$(( $(ls -l "$log_file" | awk -F ' ' '{print $5}') / 1024 >= log_max_size))" -eq "0" ] || echo "" > "$log_file"
+	[ "$(($(ls -l "$log_file" | awk -F ' ' '{print $5}') / 1024 >= log_max_size))" -eq "0" ] || echo "" >"$log_file"
 done

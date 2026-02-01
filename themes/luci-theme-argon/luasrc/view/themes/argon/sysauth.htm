@@ -41,7 +41,6 @@
 		end
 	end
 
-
 	local imageTypes = " jpg png gif webp "
 	local videoTypes = " mp4 webm "
 	local allTypes = imageTypes .. videoTypes
@@ -109,11 +108,11 @@
 	</div>
 	<div class="volume-control mute"></div>
 	<script>
-		$(".volume-control").click(function(){
-			if($(this).hasClass("mute")){
+		$(".volume-control").click(function() {
+			if ($(this).hasClass("mute")) {
 				$(this).removeClass("mute")
 				$("#video").prop('muted', false);
-			}else{
+			} else {
 				$(this).addClass("mute")
 				$("#video").prop('muted', true);
 			}
@@ -151,13 +150,15 @@
 					</div>
 				</div>
 				<div>
-					<input type="submit" value="<%:Login%>" class="cbi-button cbi-button-apply" />
+					<input type="submit" value="<%:Log in%>" class="cbi-button cbi-button-apply" />
 				</div>
 			</form>
 			<!-- Login Form End -->
-			<script type="text/javascript">//<![CDATA[
+			<script type="text/javascript">
+				//<![CDATA[
 				var input = document.getElementsByName('luci_password')[0];
 				if (input)
 					input.focus();
-			//]]></script>
-<%+themes/argon/footer_login%>
+				//]]>
+			</script>
+			<%+themes/argon/footer_login%>

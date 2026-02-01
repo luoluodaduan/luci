@@ -1,7 +1,6 @@
-#
 # Zheng Qian <sotux82@gmail.com>, 2019.
 # Yangfl <mmyangfl@gmail.com>, 2018, 2019.
-#
+
 msgid ""
 msgstr ""
 "PO-Revision-Date: 2023-03-23 14:42+0000\n"
@@ -6731,8 +6730,7 @@ msgid ""
 "to DHCP clients. They are also required for non-dynamic interface "
 "configurations where only hosts with a corresponding lease are served."
 msgstr ""
-"静态租约用于给 DHCP 客户端分配固定的 IP 地址和主机标识。只有指定的主机才能连"
-"接，并且接口须为非动态配置。"
+"静态租约用于给 DHCP 客户端分配固定的 IP 地址和主机标识。只有指定的主机才能连接，并且接口须为非动态配置。"
 
 #: modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js:1175
 msgid "Station inactivity limit"
@@ -8819,3 +8817,17 @@ msgstr "只适合 802.11n 2.4Ghz"
 #~ "em>字段的值将被固定分配给 <em>MAC 地址</em>字段标识的主机，<em>租期</em>是"
 #~ "一个可选字段，可为每个主机单独设定 DHCP 租期的时长，例如：12h、3d、"
 #~ "infinite，分别表示 12 小时、3 天、永久。"
+
+msgid "Log in"
+msgstr "登录"
+
+msgid "Log in…"
+msgstr "去登录…"
+
+msgid ""
+"Hostnames are used to bind a domain name to an IP address. This setting is redundant for hostnames already configured with static leases, but it can be useful to rebind an FQDN."
+msgstr ""
+"主机名用于将域名与 IP 地址绑定。对于已经配置了静态租约的主机名，此设置多余，但它对重新绑定 FQDN 可能有用。"
+
+msgid "Active DHCPv4 Leases"
+msgstr "已分配的 DHCPv4 租约"

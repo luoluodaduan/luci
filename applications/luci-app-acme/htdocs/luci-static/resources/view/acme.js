@@ -4,15 +4,9 @@
 'require view';
 
 return view.extend({
-	load: function () {
-		return Promise.all([
-			L.resolveDefault(fs.stat('/usr/sbin/nginx'), {}),
-			L.resolveDefault(fs.stat('/usr/sbin/uhttpd'), {})
-		]);
-	},
 
 	render: function (stats) {
-		var m, s, o;
+		let m, s, o;
 
 		m = new form.Map("acme", _("ACME certificates"),
 			_("This configures ACME (Letsencrypt) automatic certificate installation. " +
@@ -25,11 +19,6 @@ return view.extend({
 
 		s = m.section(form.TypedSection, "acme", _("ACME global config"));
 		s.anonymous = true;
-
-		o = s.option(form.Value, "state_dir", _("State directory"),
-			_("Where certs and other state files are kept."));
-		o.rmempty = false;
-		o.datatype = "directory";
 
 		o = s.option(form.Value, "account_email", _("Account email"),
 			_("Email address to associate with account key."))
@@ -62,7 +51,7 @@ return view.extend({
 		o.value("4096", _("RSA 4096 bits"));
 		o.value("ec-256", _("ECC 256 bits"));
 		o.value("ec-384", _("ECC 384 bits"));
-		o.default = "2048";
+		o.default = "ec-256";
 		o.rmempty = false;
 
 		o = s.taboption('general', form.DynamicList, "domains", _("Domain names"),
@@ -71,31 +60,14 @@ return view.extend({
 				"Note that all domain names must point at the router in the global DNS."));
 		o.datatype = "list(string)";
 
-		if (stats[1].type === 'file') {
-			o = s.taboption('general', form.Flag, "update_uhttpd", _("Use for uhttpd"),
-				_("Update the uhttpd config with this certificate once issued " +
-					"(only select this for one certificate). " +
-					"Is also available luci-app-uhttpd to configure uhttpd form the LuCI interface."));
-			o.rmempty = false;
-		}
-
-		if (stats[0].type === 'file') {
-			o = s.taboption('general', form.Flag, "update_nginx", _("Use for nginx"),
-				_("Update the nginx config with this certificate once issued " +
-					"(only select this for one certificate). " +
-					"Nginx must support ssl, if not it won't start as it needs to be " +
-					"compiled with ssl support to use cert options"));
-			o.rmempty = false;
-		}
-
 		o = s.taboption('challenge', form.ListValue, "validation_method", _("Validation method"),
 			_("Standalone mode will use the built-in webserver of acme.sh to issue a certificate. " +
-			"Webroot mode will use an existing webserver to issue a certificate. " +
-			"DNS mode will allow you to use the DNS API of your DNS provider to issue a certificate."));
+				"Webroot mode will use an existing webserver to issue a certificate. " +
+				"DNS mode will allow you to use the DNS API of your DNS provider to issue a certificate."));
 		o.value("standalone", _("Standalone"));
 		o.value("webroot", _("Webroot"));
 		o.value("dns", _("DNS"));
-		o.default = "standalone";
+		o.default = "dns";
 
 		o = s.taboption('challenge', form.Value, "webroot", _("Webroot directory"),
 			_("Webserver root directory. Set this to the webserver " +
@@ -119,6 +91,10 @@ return view.extend({
 		o.datatype = "list(string)";
 		o.depends("validation_method", "dns");
 
+		o = s.taboption('challenge', form.Value, "dns_wait", _("等待 DNS 更新"),
+			_("继续前等待 DNS 记录更新的秒数。 有关此过程的详细信息，请参阅 https://github.com/acmesh-official/acme.sh/wiki/dnssleep。"));
+		o.depends("validation_method", "dns");
+
 		o = s.taboption('challenge', form.Value, "calias", _("Challenge Alias"),
 			_("The challenge alias to use for ALL domains. " +
 				"See https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode for the details of this process. " +
@@ -131,23 +107,17 @@ return view.extend({
 				"LUCI only supports one challenge domain per certificate."));
 		o.depends("validation_method", "dns");
 
-		o = s.taboption('advanced', form.Flag, "use_acme_server",
-			_("Custom ACME CA"), _("Use a custom CA instead of Let's Encrypt."));
-		o.depends("use_staging", "0");
-		o.default = false;
-
 		o = s.taboption('advanced', form.Value, "acme_server", _("ACME server URL"),
-			_("Custom ACME server directory URL."));
-		o.depends("use_acme_server", "1");
-		o.placeholder = "https://api.buypass.com/acme/directory";
+			_("使用自定义证书颁发机构代替 Let's Encrypt。自定义 ACME 服务器目录 URL。"));
+		o.depends("use_staging", "0");
+		o.placeholder = "zerossl";
 		o.optional = true;
 
 		o = s.taboption('advanced', form.Value, 'days', _('Days until renewal'));
-		o.optional    = true;
-		o.placeholder = 90;
-		o.datatype    = 'uinteger';
+		o.optional = true;
+		o.placeholder = 60;
+		o.datatype = 'uinteger';
 
 		return m.render()
 	}
 })
-
