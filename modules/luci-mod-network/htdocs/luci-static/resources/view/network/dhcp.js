@@ -199,33 +199,37 @@ function validateMACAddr(pools, sid, s) {
 	if (s == null || s == '')
 		return true;
 
+	if (!this || !this.section)
+		return true;
+
+	var ipaddr = this.section.formvalue(sid, 'ip');
+	if (!ipaddr)
+		return true;
+
 	var leases = uci.sections('dhcp', 'host'),
 		this_macs = L.toArray(s).map(function (m) { return m.toUpperCase() });
 
 	for (var i = 0; i < pools.length; i++) {
-		var this_net_mask = calculateNetwork(this.section.formvalue(sid, 'ip'), pools[i].netmask);
-
-		if (!this_net_mask)
-			continue;
+		var this_net_mask = calculateNetwork(ipaddr, pools[i].netmask);
+		if (!this_net_mask) continue;
 
 		for (var j = 0; j < leases.length; j++) {
-			if (leases[j]['.name'] == sid || !leases[j].ip)
-				continue;
+			var lease = leases[j];
 
-			var lease_net_mask = calculateNetwork(leases[j].ip, pools[i].netmask);
+			if (lease['.name'] == sid || !lease.ip || !lease.mac) continue;
+			var lease_net_mask = calculateNetwork(lease.ip.trim(), pools[i].netmask);
 
 			if (!lease_net_mask || this_net_mask[0] != lease_net_mask[0])
 				continue;
+			var lease_macs = L.toArray(lease.mac).map(function (m) { return m.toUpperCase() });
 
-			var lease_macs = L.toArray(leases[j].mac).map(function (m) { return m.toUpperCase() });
-
-			for (var k = 0; k < lease_macs.length; k++)
-				for (var l = 0; l < this_macs.length; l++)
-					if (lease_macs[k] == this_macs[l])
-						return _('The MAC address %h is already used by another static lease in the same DHCP pool').format(this_macs[l]);
+			for (var k = 0; k < lease_macs.length; k++) {
+				if (this_macs.indexOf(lease_macs[k]) !== -1) {
+					return _('The MAC address %h is already used by another static lease in the same DHCP pool').format(lease_macs[k]);
+				}
+			}
 		}
 	}
-
 	return true;
 }
 
@@ -260,10 +264,10 @@ return view.extend({
 		s.tab("custom_conf", _("自定义 Dnsmasq"));
 
 		o = s.taboption("custom_conf", form.TextValue, "_custom_conf");
-		o.rows = 30;
+		o.rows = 25;
 		o.monospace = true; // 使用等宽字体，方便排版
 		o.wrap = "off"; // 关闭自动换行
-		o.description = _("直接编辑 <code>/etc/dnsmasq.conf</code> 文件。保存后更改即可生效。");
+		o.description = _("直接编辑 <code>/etc/dnsmasq.conf</code> 文件。保存后即可生效。");
 
 		o.cfgvalue = function (section_id) {
 			return L.resolveDefault(fs.read('/etc/dnsmasq.conf'), '');
@@ -275,13 +279,12 @@ return view.extend({
 
 			return fs.read(path).then(function (current) {
 				if (current === content) return;
-
 				return fs.write(path, content).then(function () {
-					return fs.exec('/etc/init.d/dnsmasq', ['reload']).then(function (res) {
-						if (res.code === 0) {
-							ui.addNotification(null, E("p", _("配置已更新并应用。")), "info");
+					fs.exec('/etc/init.d/dnsmasq', ['reload']).then(function (res) {
+						if (res && res.code === 0) {
+							ui.addNotification(null, E("p", _("配置已保存并应用。")), "info");
 						} else {
-							ui.addNotification(null, E("p", _("文件已写入，但服务重启失败。")), "danger");
+							ui.addNotification(null, E("p", _("配置已保存，但服务重载失败。")), "warning");
 						}
 					});
 				}).catch(function (e) {

@@ -70,7 +70,7 @@ return view.extend({
 
 	render: function (data) {
 
-		var m, s, o;
+		let m, s, o;
 
 		m = new form.Map('upnpd', [_('Universal Plug & Play')],
 			_('UPnP allows clients in the local network to automatically configure the router.'));

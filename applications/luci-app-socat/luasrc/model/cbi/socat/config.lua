@@ -12,8 +12,8 @@ o.default = "1"
 o.rmempty = false
 
 o = s:option(Value, "remarks", translate("Remarks"))
+o.placeholder = translate("Remarks")
 o.rmempty = false
-o.placeholder = "Remarks"
 
 o = s:option(ListValue, "protocol", translate("Protocol"))
 o:value("port_forwards", translate("Port Forwards"))

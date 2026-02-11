@@ -46,17 +46,9 @@ function s.create(self, section)
 	luci.http.redirect(d.build_url("admin", "services", "socat", "config", short_id))
 end
 
-o = s:option(DummyValue, "enable", translate("Enable"))
+o = s:option(Flag, "enable", translate("Enable"))
 o.width = "10%"
-o.rawhtml = true
-o.cfgvalue = function(self, section)
-	local val = m:get(section, "enable")
-	if val == "1" then
-		return '<span style="color:green">' .. translate("Yes") .. "</span>"
-	else
-		return '<span style="color:gray">' .. translate("no") .. "</span>"
-	end
-end
+o.rmempty = false
 
 o = s:option(DummyValue, "status", translate("Status"))
 o.width = "10%"

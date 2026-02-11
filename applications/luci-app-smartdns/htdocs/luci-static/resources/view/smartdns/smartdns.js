@@ -135,7 +135,7 @@ return view.extend({
 		s.tab("advanced", _('Advanced Settings'));
 		s.tab("seconddns", _("Second Server Settings"));
 		s.tab("dns64", _("DNS64 Server Settings"));
-		s.tab("files", _("Download Files Setting"), _("Download domain list files for domain-rule and include config files, please refresh the page after download to take effect."));
+		s.tab("files", _("Download Files Setting"));
 		s.tab("proxy", _("Proxy Server Settings"));
 		s.tab("custom", _("Custom Settings"));
 
