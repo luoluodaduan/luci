@@ -28,7 +28,7 @@ return view.extend({
 		o = s.option(form.Flag, "debug", _("Enable debug logging"));
 		o.rmempty = false;
 
-		s = m.section(form.TypedSection, "cert", _("Certificate config"))
+		s = m.section(form.TypedSection, "cert", _("Certificate config"));
 		s.anonymous = false;
 		s.addremove = true;
 

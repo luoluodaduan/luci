@@ -61,9 +61,9 @@ function smartdnsRenderStatus(res) {
 	var dnsmasqServer = uci.get_first('dhcp', 'dnsmasq', 'server');
 
 	if (isRunning) {
-		renderHTML += "<span style=\"color:green;font-weight:bold\">SmartDNS - " + _("RUNNING") + "</span>";
+		renderHTML += "<span style=\"color:green;font-weight:bold\">SmartDNS " + _("RUNNING") + "</span>";
 	} else {
-		renderHTML += "<span style=\"color:red;font-weight:bold\">SmartDNS - " + _("NOT RUNNING") + "</span>";
+		renderHTML += "<span style=\"color:red;font-weight:bold\">SmartDNS " + _("NOT RUNNING") + "</span>";
 		if (smartdnsEnable === '1') {
 			renderHTML += "<br /><span style=\"color:red;font-weight:bold\">" + _("Please check the system logs and check if the configuration is valid.");
 			renderHTML += "</span>";
@@ -251,6 +251,10 @@ return view.extend({
 		o.rmempty = false;
 		o.default = o.disabled;
 
+		o = s.taboption("advanced", form.Flag, "ddr", _("DDR"), _("Enable Discovery of Designated Resolvers for enabled local DNS services."));
+		o.rmempty = true;
+		o.default = o.disabled;
+
 		o = s.taboption("advanced", form.Value, "doh_server_port", _("DOH Server Port"), _("Smartdns DOH server port."));
 		o.placeholder = 843;
 		o.default = 843;
@@ -322,7 +326,7 @@ return view.extend({
 		o.default = o.enabled;
 
 		// resolve local hostname;
-		o = s.taboption("advanced", form.Flag, "resolve_local_hostnames", _("Resolve Local Hostnames"), _("Resolve local hostnames by reading Dnsmasq lease file."));
+		o = s.taboption("advanced", form.Flag, "resolve_local_hostnames", _("Resolve Local Hostnames"), _("Resolve local hostnames by reading Dnsmasq or odhcpd lease files."));
 		o.rmempty = false;
 		o.default = o.enabled;
 
@@ -826,7 +830,7 @@ return view.extend({
 		// Upstream servers;
 		////////////////
 		s = m.section(form.GridSection, "server", _("Upstream Servers"),
-			_("Upstream Servers, support UDP, TCP, DoT, DoH protocol. Please configure multiple DNS servers, "
+			_("Upstream Servers, support UDP, TCP, TLS, HTTPS protocol. Please configure multiple DNS servers, "
 				+ "including multiple foreign DNS servers."));
 		s.anonymous = true;
 		s.addremove = true;

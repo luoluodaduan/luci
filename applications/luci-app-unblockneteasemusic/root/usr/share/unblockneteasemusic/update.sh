@@ -5,6 +5,7 @@
 NAME="unblockneteasemusic"
 UNM_DIR="/usr/share/$NAME"
 RUN_DIR="/var/run/$NAME"
+PROXY_URL="https://gh-proxy.org"
 mkdir -p "$RUN_DIR"
 
 LOCK="$RUN_DIR/update_core.lock"
@@ -55,7 +56,7 @@ update_core() {
 	fi
 
 	for file in $file_list; do
-		wget --timeout=10 --tries=3 "https://gh-proxy.org/https://raw.githubusercontent.com/UnblockNeteaseMusic/server/$core_latest_ver/$file" -qO "$UNM_DIR/core/${file##*/}"
+		wget --timeout=10 --tries=3 "$PROXY_URL/https://raw.githubusercontent.com/UnblockNeteaseMusic/server/$core_latest_ver/$file" -qO "$UNM_DIR/core/${file##*/}"
 		[ -s "$UNM_DIR/core/${file##*/}" ] || {
 			echo -e "Failed to download ${file##*/}." >>"$LOG"
 			return 1
@@ -63,7 +64,7 @@ update_core() {
 	done
 
 	for cert in "ca.crt" "server.crt" "server.key"; do
-		wget --timeout=10 --tries=3 "https://gh-proxy.org/https://raw.githubusercontent.com/UnblockNeteaseMusic/server/$core_latest_ver/$cert" -qO "$UNM_DIR/core/$cert"
+		wget --timeout=10 --tries=3 "$PROXY_URL/https://raw.githubusercontent.com/UnblockNeteaseMusic/server/$core_latest_ver/$cert" -qO "$UNM_DIR/core/$cert"
 		[ -s "$UNM_DIR/core/${cert}" ] || {
 			echo -e "Failed to download ${cert}." >>"$LOG"
 			return 1
