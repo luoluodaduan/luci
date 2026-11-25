@@ -787,7 +787,7 @@ msgstr ""
 
 #: smartdns.js:882
 msgid ""
-"Upstream Servers, support UDP, TCP, DoT, DoH protocol. Please "
+"Upstream Servers, support UDP, TCP, DoT, DoH, DoQ, DoH3 protocol. Please "
 "configure multiple DNS servers, including multiple foreign DNS servers."
 msgstr ""
 

@@ -107,13 +107,12 @@ o = s:option(DummyValue, "dest_port", translate("Destination port"))
 
 o = s:option(DummyValue, "firewall_accept", translate("Firewall"))
 o.width = "10%"
-o.rawhtml = true
 o.cfgvalue = function(self, section)
 	local val = m:get(section, "firewall_accept") or "1"
 	if val == "1" then
-		return '<span style="color:green">' .. translate("Yes") .. "</span>"
+		return translate("Yes")
 	else
-		return '<span style="color:gray">' .. translate("No") .. "</span>"
+		return translate("No")
 	end
 end
 

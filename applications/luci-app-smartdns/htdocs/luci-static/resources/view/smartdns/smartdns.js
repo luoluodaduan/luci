@@ -61,9 +61,9 @@ function smartdnsRenderStatus(res) {
 	var dnsmasqServer = uci.get_first('dhcp', 'dnsmasq', 'server');
 
 	if (isRunning) {
-		renderHTML += "<span style=\"color:green;font-weight:bold\">SmartDNS - " + _("RUNNING") + "</span>";
+		renderHTML += "<span style=\"color:green;font-weight:bold\">SmartDNS " + _("RUNNING") + "</span>";
 	} else {
-		renderHTML += "<span style=\"color:red;font-weight:bold\">SmartDNS - " + _("NOT RUNNING") + "</span>";
+		renderHTML += "<span style=\"color:red;font-weight:bold\">SmartDNS " + _("NOT RUNNING") + "</span>";
 		if (smartdnsEnable === '1') {
 			renderHTML += "<br /><span style=\"color:red;font-weight:bold\">" + _("Please check the system logs and check if the configuration is valid.");
 			renderHTML += "</span>";
@@ -91,7 +91,7 @@ return view.extend({
 		]);
 	},
 	render: function (stats) {
-		let m, s, o;
+		var m, s, o;
 		var ss, so;
 		var servers, download_files;
 
@@ -251,6 +251,10 @@ return view.extend({
 		o.rmempty = false;
 		o.default = o.disabled;
 
+		o = s.taboption("advanced", form.Flag, "ddr", _("DDR"), _("Enable Discovery of Designated Resolvers for enabled local DNS services."));
+		o.rmempty = true;
+		o.default = o.disabled;
+
 		o = s.taboption("advanced", form.Value, "doh_server_port", _("DOH Server Port"), _("Smartdns DOH server port."));
 		o.placeholder = 843;
 		o.default = 843;
@@ -322,7 +326,7 @@ return view.extend({
 		o.default = o.enabled;
 
 		// resolve local hostname;
-		o = s.taboption("advanced", form.Flag, "resolve_local_hostnames", _("Resolve Local Hostnames"), _("Resolve local hostnames by reading Dnsmasq lease file."));
+		o = s.taboption("advanced", form.Flag, "resolve_local_hostnames", _("Resolve Local Hostnames"), _("Resolve local hostnames by reading Dnsmasq or odhcpd lease files."));
 		o.rmempty = false;
 		o.default = o.enabled;
 
@@ -682,11 +686,11 @@ return view.extend({
 		ss.anonymous = true;
 		ss.sortable = true;
 
-		so = ss.option(form.Value, 'name', _('File Name'), _('File Name'));
+		so = ss.option(form.Value, 'name', _('File Name'));
 		so.rmempty = true;
 		so.datatype = 'file';
 
-		so = ss.option(form.Value, 'url', _('URL'), _('URL'));
+		so = ss.option(form.Value, 'url', _('URL'));
 		so.rmempty = true;
 		so.datatype = 'string';
 		so.validate = function (section_id, value) {
@@ -701,7 +705,7 @@ return view.extend({
 			return true;
 		}
 
-		so = ss.option(form.ListValue, "type", _("type"), _("File Type"));
+		so = ss.option(form.ListValue, "type", _("File Type"));
 		so.value("list", _("domain list (/etc/smartdns/domain-set)"));
 		so.value("config", _("smartdns config (/etc/smartdns/conf.d)"));
 		so.value("ip-set", _("ip-set file (/etc/smartdns/ip-set)"));
@@ -709,7 +713,7 @@ return view.extend({
 		so.default = "list";
 		so.rempty = false;
 
-		so = ss.option(form.Value, 'desc', _('Description'), _('Description'));
+		so = ss.option(form.Value, 'desc', _('Description'));
 		so.rmempty = true;
 		so.datatype = 'string';
 
@@ -733,8 +737,7 @@ return view.extend({
 		///////////////////////////////////////
 		// custom settings;
 		///////////////////////////////////////
-		o = s.taboption("custom", form.TextValue, "custom_conf", "",
-			_("smartdns custom settings"));
+		o = s.taboption("custom", form.TextValue, "custom_conf", "", _("smartdns custom settings"));
 		o.rows = 20;
 		o.monospace = true;
 		o.wrap = "off";
@@ -826,7 +829,7 @@ return view.extend({
 		// Upstream servers;
 		////////////////
 		s = m.section(form.GridSection, "server", _("Upstream Servers"),
-			_("Upstream Servers, support UDP, TCP, DoT, DoH protocol. Please configure multiple DNS servers, "
+			_("Upstream Servers, support UDP, TCP, TLS, HTTPS, QUIC and HTTP3 protocol. Please configure multiple DNS servers, "
 				+ "including multiple foreign DNS servers."));
 		s.anonymous = true;
 		s.addremove = true;
@@ -836,40 +839,43 @@ return view.extend({
 		s.tab('advanced', _('Advanced Settings'));
 
 		// enable flag;
-		o = s.taboption("general", form.Flag, "enabled", _("Enable"), _("Enable"));
+		o = s.taboption("general", form.Flag, "enabled", _("Enable"));
 		o.rmempty = false;
 		o.default = o.enabled;
 		o.editable = true;
 
 		// name;
-		o = s.taboption("general", form.Value, "name", _("DNS Server Name"), _("DNS Server Name"));
+		o = s.taboption("general", form.Value, "name", _("DNS Server Name"));
 
 		// IP address;
-		o = s.taboption("general", form.Value, "ip", _("ip"), _("DNS Server ip"));
+		o = s.taboption("general", form.Value, "ip", _("DNS Server ip"));
 		o.datatype = "or(ipaddr, string)";
 		o.rmempty = false;
 
 		// port;
-		o = s.taboption("general", form.Value, "port", _("port"), _("DNS Server port"));
+		o = s.taboption("general", form.Value, "port", _("DNS Server port"));
 		o.placeholder = "default";
 		o.datatype = "port";
 		o.rempty = true;
 		o.depends("type", "udp");
 		o.depends("type", "tcp");
 		o.depends("type", "tls");
+		o.depends("type", "quic");
 
 		// type;
-		o = s.taboption("general", form.ListValue, "type", _("type"), _("DNS Server type"));
+		o = s.taboption("general", form.ListValue, "type", _("DNS Server type"));
 		o.placeholder = "udp";
 		o.value("udp", _("udp"));
 		o.value("tcp", _("tcp"));
 		o.value("tls", _("tls"));
 		o.value("https", _("https"));
+		o.value("quic", _("quic"));
+		o.value("h3", _("http3"));
 		o.default = "udp";
 		o.rempty = false;
 
 		// server group
-		o = s.taboption("general", form.Value, "server_group", _("Server Group"), _("DNS Server group"))
+		o = s.taboption("general", form.Value, "server_group", _("DNS Server group"))
 		o.rmempty = true;
 		o.placeholder = "default";
 		o.datatype = "hostname";
@@ -910,6 +916,8 @@ return view.extend({
 		o.modalonly = true;
 		o.depends("type", "tls");
 		o.depends("type", "https");
+		o.depends("type", "quic");
+		o.depends("type", "h3");
 
 		// certificate verify
 		o = s.taboption("advanced", form.Flag, "no_check_certificate", _("No check certificate"),
@@ -919,16 +927,19 @@ return view.extend({
 		o.modalonly = true;
 		o.depends("type", "tls");
 		o.depends("type", "https");
+		o.depends("type", "quic");
+		o.depends("type", "h3");
 
 		// SNI host name
 		o = s.taboption("advanced", form.Value, "host_name", _("TLS SNI name"),
 			_("Sets the server name indication for query. '-' for disable SNI name."))
 		o.default = ""
-		o.datatype = "hostname"
 		o.rempty = true
 		o.modalonly = true;
 		o.depends("type", "tls");
 		o.depends("type", "https");
+		o.depends("type", "quic");
+		o.depends("type", "h3");
 
 		// http host
 		o = s.taboption("advanced", form.Value, "http_host", _("HTTP Host"),
@@ -938,6 +949,7 @@ return view.extend({
 		o.rempty = true
 		o.modalonly = true;
 		o.depends("type", "https");
+		o.depends("type", "h3");
 
 		// SPKI pin
 		o = s.taboption("advanced", form.Value, "spki_pin", _("TLS SPKI Pinning"),
@@ -949,6 +961,8 @@ return view.extend({
 		o.modalonly = true;
 		o.depends("type", "tls");
 		o.depends("type", "https");
+		o.depends("type", "quic");
+		o.depends("type", "h3");
 
 		// mark
 		o = s.taboption("advanced", form.Value, "set_mark", _("Marking Packets"),
@@ -977,8 +991,9 @@ return view.extend({
 				return _("Please set proxy server first.");
 			}
 
-			if (server_type == "udp" && !proxy_server.match(/^(socks5):\/\//)) {
-				return _("Only socks5 proxy support udp server.");
+			if ((server_type == "udp" || server_type == "quic" || server_type == "h3")
+				&& !proxy_server.match(/^(socks5):\/\//)) {
+				return _("Only socks5 proxy support UDP, QUIC and HTTP3 server.");
 			}
 
 			return true;
@@ -1417,15 +1432,15 @@ return view.extend({
 		ss.sortable = true;
 
 		// enable flag;
-		so = ss.option(form.Flag, "enabled", _("Enable"), _("Enable"));
+		so = ss.option(form.Flag, "enabled", _("Enable"));
 		so.rmempty = false;
 		so.default = so.enabled;
 		so.editable = true;
 
 		// name;
-		so = ss.option(form.Value, "name", _("Domain Rule Name"), _("Domain Rule Name"));
+		so = ss.option(form.Value, "name", _("Domain Rule Name"));
 
-		so = ss.option(form.Value, "server_group", _("Server Group"), _("DNS Server group belongs to, such as office, home."))
+		so = ss.option(form.Value, "server_group", _("Server Group"))
 		so.rmempty = true
 		so.placeholder = "default"
 		so.datatype = "hostname"
@@ -1449,8 +1464,7 @@ return view.extend({
 
 		}
 
-		so = ss.option(form.FileUpload, "domain_list_file", _("Domain List File"),
-			_("Upload domain list file, or configure auto download from Download File Setting page."));
+		so = ss.option(form.FileUpload, "domain_list_file", _("Domain List File"));
 		so.rmempty = true
 		so.datatype = "file"
 		so.rempty = true
@@ -1606,13 +1620,13 @@ return view.extend({
 		ss.sortable = true;
 
 		// enable flag;
-		so = ss.option(form.Flag, "enabled", _("Enable"), _("Enable"));
+		so = ss.option(form.Flag, "enabled", _("Enable"));
 		so.rmempty = false;
 		so.default = so.enabled;
 		so.editable = true;
 
 		// name;
-		so = ss.option(form.Value, "name", _("IP Rule Name"), _("IP Rule Name"));
+		so = ss.option(form.Value, "name", _("IP Rule Name"));
 		so.rmempty = true;
 		so.datatype = "string";
 
